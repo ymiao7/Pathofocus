@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathoFocus - WSI Diagnostic System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        /* CSS VARIABLES & RESET */
+        :root {
+            --bg-primary: #0f0f13;
+            --bg-secondary: #16161d;
+            --bg-tertiary: #1e1e28;
+            --bg-card: rgba(30, 30, 40, 0.8);
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --text-primary: #f0f0f5;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --accent-primary: #6366f1;
+            --accent-primary-dim: rgba(99, 102, 241, 0.15);
+            --accent-success: #10b981;
+            --accent-success-dim: rgba(16, 185, 129, 0.15);
+            --accent-warning: #f59e0b;
+            --accent-warning-dim: rgba(245, 158, 11, 0.15);
+            --accent-danger: #ef4444;
+            --accent-danger-dim: rgba(239, 68, 68, 0.15);
+            --accent-info: #06b6d4;
+            --accent-info-dim: rgba(6, 182, 212, 0.15);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --transition-fast: 150ms ease;
+            --transition-normal: 250ms ease;
+            --transition-slow: 400ms ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* LAYOUT STRUCTURE */
+        .app-container {
+            display: grid;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary), #818cf8);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text span {
+            color: var(--accent-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-fast);
+        }
+
+        .header-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--border-light);
+        }
+
+        .header-btn.primary {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .header-btn.primary:hover {
+            background: #5558e3;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 0;
+            height: calc(100vh - 60px - 180px);
+            overflow: hidden;
+        }
+
+        /* Slide Viewer Section */
+        .viewer-section {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+            position: relative;
+        }
+
+        .viewer-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .slide-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slide-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .slide-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .slide-badge.validated {
+            background: var(--accent-success-dim);
+            color: var(--accent-success);
+        }
+
+        .slide-badge.new {
+            background: var(--accent-info-dim);
+            color: var(--accent-info);
+        }
+
+        .viewer-tools {
+            display: flex;
+            gap: 4px;
+        }
+
+        .tool-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: var(--transition-fast);
+        }
+
+        .tool-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .tool-btn.active {
+            background: var(--accent-primary-dim);
+            color: var(--accent-primary);
+        }
+
+        /* Slide Canvas */
+        .slide-canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #0a0a0d;
+        }
+
+        .slide-canvas {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slide-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .slide-placeholder i {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .slide-placeholder p {
+            font-size: 14px;
+        }
+
+        /* Slide Display */
+        .slide-display {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0d;
+            overflow: hidden;
+        }
+
+        .slide-image {
+            position: absolute;
+            border-radius: var(--radius-md);
+            transition: transform 0.2s ease;
+            cursor: grab;
+            transform-origin: center center;
+        }
+
+        .slide-image:active {
+            cursor: grabbing;
+        }
+
+        .slide-image.loading {
+            opacity: 0.3;
+        }
+
+        .slide-image.zoomed {
+            cursor: move;
+        }
+
+        .slide-image-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: 12px;
+        }
+
+        .slide-image-error i {
+            font-size: 48px;
+            opacity: 0.5;
+        }
+
+        /* Fullscreen mode */
+        .viewer-section.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            height: 100vh !important;
+            background: var(--bg-primary);
+        }
+
+        .viewer-section.fullscreen .slide-canvas-container {
+            height: 100%;
+        }
+
+        .viewer-section.fullscreen .viewer-toolbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            background: rgba(22, 22, 29, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        /* DIAGNOSIS PANEL (Right Sidebar) */
+        .diagnosis-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .diagnosis-cards {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .diagnosis-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .diagnosis-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+        }
+
+        .diagnosis-card.active {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 1px var(--accent-primary);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .card-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .card-prediction {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .card-prediction.g1 { background: var(--accent-success-dim); color: var(--accent-success); }
+        .card-prediction.g2 { background: var(--accent-warning-dim); color: var(--accent-warning); }
+        .card-prediction.g3 { background: var(--accent-danger-dim); color: var(--accent-danger); }
+        .card-prediction.absent { background: var(--accent-success-dim); color: var(--accent-success); }
+        .card-prediction.present { background: var(--accent-danger-dim); color: var(--accent-danger); }
+        .card-prediction.f0 { background: var(--accent-success-dim); color: var(--accent-success); }
+        .card-prediction.f2 { background: var(--accent-warning-dim); color: var(--accent-warning); }
+        .card-prediction.f4 { background: var(--accent-danger-dim); color: var(--accent-danger); }
+
+        .probability-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .prob-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prob-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            width: 60px;
+            flex-shrink: 0;
+        }
+
+        .prob-bar-container {
+            flex: 1;
+            height: 6px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .prob-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .prob-bar.grade { background: linear-gradient(90deg, var(--accent-success), var(--accent-warning)); }
+        .prob-bar.fibrosis { background: linear-gradient(90deg, var(--accent-info), var(--accent-primary)); }
+        .prob-bar.mvi { background: linear-gradient(90deg, var(--accent-warning), var(--accent-danger)); }
+
+        .prob-value {
+            font-size: 11px;
+            font-weight: 600;
+            width: 40px;
+            text-align: right;
+            color: var(--text-primary);
+        }
+
+        .confidence-indicator {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .confidence-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .confidence-value {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .confidence-value.high { color: var(--accent-success); }
+        .confidence-value.medium { color: var(--accent-warning); }
+        .confidence-value.low { color: var(--accent-danger); }
+
+        /* MVI Alert */
+        .mvi-alert {
+            display: none;
+            background: var(--accent-danger-dim);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin: 0 16px 12px;
+        }
+
+        .mvi-alert.visible {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .mvi-alert i {
+            font-size: 20px;
+            color: var(--accent-danger);
+        }
+
+        .mvi-alert-content {
+            flex: 1;
+        }
+
+        .mvi-alert-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-danger);
+        }
+
+        .mvi-alert-subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* RETRIEVAL PANEL (Bottom Panel) */
+        .retrieval-panel {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-subtle);
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .retrieval-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .retrieval-title {
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .retrieval-title i {
+            color: var(--accent-primary);
+        }
+
+        .retrieval-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .strategy-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .strategy-btn:hover {
+            border-color: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .strategy-btn.active {
+            background: var(--accent-primary-dim);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .retrieval-grid {
+            display: flex;
+            gap: 12px;
+            padding: 12px 20px;
+            overflow-x: auto;
+            flex: 1;
+        }
+
+        .retrieval-grid::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .retrieval-grid::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+            border-radius: 3px;
+        }
+
+        .retrieval-grid::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .retrieval-card {
+            flex-shrink: 0;
+            width: 200px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .retrieval-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .retrieval-card.selected {
+            border-color: var(--accent-success);
+            box-shadow: 0 0 0 2px var(--accent-success-dim);
+        }
+
+        .retrieval-thumbnail {
+            height: 70px;
+            background: linear-gradient(135deg, #1a1520 0%, #201828 50%, #182020 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .retrieval-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .retrieval-thumbnail .thumb-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1520, #201828, #182020);
+            color: var(--text-muted);
+            font-size: 24px;
+        }
+
+        .similarity-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--accent-success);
+        }
+
+        .retrieval-info {
+            padding: 10px;
+        }
+
+        .retrieval-name {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .retrieval-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .retrieval-tag {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .retrieval-tag.grade { background: var(--accent-warning-dim); color: var(--accent-warning); }
+        .retrieval-tag.fibrosis { background: var(--accent-info-dim); color: var(--accent-info); }
+        .retrieval-tag.mvi-pos { background: var(--accent-danger-dim); color: var(--accent-danger); }
+        .retrieval-tag.mvi-neg { background: var(--accent-success-dim); color: var(--accent-success); }
+
+        /* Empty State */
+        .retrieval-empty {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .retrieval-empty i {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        /* DROPZONE OVERLAY */
+        .dropzone-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 19, 0.95);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropzone-overlay.active {
+            display: flex;
+        }
+
+        .dropzone-content {
+            text-align: center;
+            padding: 60px;
+            border: 2px dashed var(--accent-primary);
+            border-radius: var(--radius-xl);
+            background: var(--accent-primary-dim);
+        }
+
+        .dropzone-content i {
+            font-size: 64px;
+            color: var(--accent-primary);
+            margin-bottom: 20px;
+        }
+
+        .dropzone-content h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .dropzone-content p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* LOADING STATES */
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 15, 19, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 50;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* COMPARISON MODAL */
+        .comparison-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comparison-modal.active {
+            display: flex;
+        }
+
+        .comparison-content {
+            width: 95%;
+            height: 90%;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition-fast);
+        }
+
+        .close-btn:hover {
+            background: var(--accent-danger-dim);
+            color: var(--accent-danger);
+        }
+
+        .comparison-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border-subtle);
+        }
+
+        .comparison-slide {
+            background: var(--bg-primary);
+            position: relative;
+        }
+
+        .comparison-slide-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            z-index: 10;
+        }
+
+        .comparison-slide-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .comparison-slide-label.query { color: var(--accent-primary); }
+        .comparison-slide-label.reference { color: var(--accent-success); }
+
+        .comparison-slide-name {
+            font-size: 14px;
+        }
+
+        .comparison-slide-canvas {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1520 0%, #201828 50%, #182020 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 60px 16px 16px 16px; /* top padding to avoid overlap with header */
+            box-sizing: border-box;
+        }
+        
+        .comparison-slide-canvas img {
+            position: absolute;
+            top: 60px;
+            left: 16px;
+            right: 16px;
+            bottom: 16px;
+            width: calc(100% - 32px);
+            height: calc(100% - 76px);
+            object-fit: contain;
+        }
+
+        .comparison-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .comparison-stats {
+            display: flex;
+            gap: 24px;
+        }
+
+        .comparison-stat {
+            text-align: center;
+        }
+
+        .comparison-stat-value {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .comparison-stat-value.match { color: var(--accent-success); }
+        .comparison-stat-value.mismatch { color: var(--accent-danger); }
+
+        .comparison-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .comparison-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .action-btn.secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-primary);
+        }
+
+        .action-btn.secondary:hover {
+            border-color: var(--border-light);
+        }
+
+        .action-btn.primary {
+            background: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #5558e3;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon"><i class="ri-microscope-line"></i></div>
+                <div class="logo-text">Patho<span>Focus</span></div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="showDatabaseStats()">
+                    <i class="ri-database-2-line"></i> Database
+                </button>
+                <button class="header-btn primary" onclick="triggerFileUpload()">
+                    <i class="ri-upload-cloud-line"></i> Load Slide
+                </button>
+                <input type="file" id="fileInput" accept=".svs,.ndpi,.tiff,.png,.jpg" style="display:none" onchange="handleFileSelect(event)">
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Slide Viewer -->
+            <section class="viewer-section">
+                <div class="viewer-toolbar">
+                    <div class="slide-info">
+                        <span class="slide-name" id="currentSlideName">No slide loaded</span>
+                        <span class="slide-badge validated" id="slideBadge" style="display:none">Validated</span>
+                    </div>
+                    <div class="viewer-tools">
+                        <button class="tool-btn" id="zoomInBtn" title="Zoom In" onclick="zoomIn()"><i class="ri-zoom-in-line"></i></button>
+                        <button class="tool-btn" id="zoomOutBtn" title="Zoom Out" onclick="zoomOut()"><i class="ri-zoom-out-line"></i></button>
+                        <button class="tool-btn" id="fitViewBtn" title="Fit to View" onclick="fitToView()"><i class="ri-aspect-ratio-line"></i></button>
+                        <button class="tool-btn" id="fullscreenBtn" title="Toggle Fullscreen" onclick="toggleFullscreen()"><i class="ri-fullscreen-line"></i></button>
+                    </div>
+                </div>
+
+                <div class="slide-canvas-container" id="slideCanvas">
+                    <div class="slide-canvas">
+                        <div class="slide-placeholder" id="slidePlaceholder">
+                            <i class="ri-image-add-line"></i>
+                            <p>Drop a WSI file here or click "Load Slide"</p>
+                        </div>
+                        <div class="slide-display" id="slideDisplay" style="display: none;">
+                            <img id="slideImage" class="slide-image" src="" alt="WSI Thumbnail" />
+                        </div>
+                    </div>
+                    <div class="loading-overlay" id="viewerLoading">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Analyzing slide...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Diagnosis Panel -->
+            <aside class="diagnosis-panel">
+                <div class="panel-header">
+                    <div class="panel-title">AI Diagnosis</div>
+                </div>
+
+                <!-- MVI Alert -->
+                <div class="mvi-alert" id="mviAlert">
+                    <i class="ri-alert-line"></i>
+                    <div class="mvi-alert-content">
+                        <div class="mvi-alert-title">MVI Detected</div>
+                        <div class="mvi-alert-subtitle">High confidence microvascular invasion</div>
+                    </div>
+                </div>
+
+                <div class="diagnosis-cards" id="diagnosisCards">
+                    <!-- Grade Card -->
+                    <div class="diagnosis-card" id="gradeCard" onclick="selectDiagnosis('grade')">
+                        <div class="card-header">
+                            <span class="card-label">Tumor Grade</span>
+                            <span class="card-prediction g2" id="gradePrediction">--</span>
+                        </div>
+                        <div class="probability-bars" id="gradeProbs">
+                            <div class="prob-row">
+                                <span class="prob-label">G1 (Well)</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar grade" id="gradeBar0" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="gradeVal0">--</span>
+                            </div>
+                            <div class="prob-row">
+                                <span class="prob-label">G2 (Mod)</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar grade" id="gradeBar1" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="gradeVal1">--</span>
+                            </div>
+                            <div class="prob-row">
+                                <span class="prob-label">G3 (Poor)</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar grade" id="gradeBar2" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="gradeVal2">--</span>
+                            </div>
+                        </div>
+                        <div class="confidence-indicator">
+                            <span class="confidence-label">Confidence</span>
+                            <span class="confidence-value high" id="gradeConf">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Fibrosis Card -->
+                    <div class="diagnosis-card" id="fibrosisCard" onclick="selectDiagnosis('fibrosis')">
+                        <div class="card-header">
+                            <span class="card-label">Fibrosis Stage</span>
+                            <span class="card-prediction f2" id="fibrosisPrediction">--</span>
+                        </div>
+                        <div class="probability-bars" id="fibrosisProbs">
+                            <div class="prob-row">
+                                <span class="prob-label">F0-F1</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar fibrosis" id="fibBar0" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="fibVal0">--</span>
+                            </div>
+                            <div class="prob-row">
+                                <span class="prob-label">F2-F3</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar fibrosis" id="fibBar1" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="fibVal1">--</span>
+                            </div>
+                            <div class="prob-row">
+                                <span class="prob-label">F4</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar fibrosis" id="fibBar2" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="fibVal2">--</span>
+                            </div>
+                        </div>
+                        <div class="confidence-indicator">
+                            <span class="confidence-label">Confidence</span>
+                            <span class="confidence-value high" id="fibConf">--</span>
+                        </div>
+                    </div>
+
+                    <!-- MVI Card -->
+                    <div class="diagnosis-card" id="mviCard" onclick="selectDiagnosis('mvi')">
+                        <div class="card-header">
+                            <span class="card-label">Microvascular Invasion</span>
+                            <span class="card-prediction absent" id="mviPrediction">--</span>
+                        </div>
+                        <div class="probability-bars" id="mviProbs">
+                            <div class="prob-row">
+                                <span class="prob-label">Absent</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar mvi" id="mviBar0" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="mviVal0">--</span>
+                            </div>
+                            <div class="prob-row">
+                                <span class="prob-label">Present</span>
+                                <div class="prob-bar-container">
+                                    <div class="prob-bar mvi" id="mviBar1" style="width: 0%"></div>
+                                </div>
+                                <span class="prob-value" id="mviVal1">--</span>
+                            </div>
+                        </div>
+                        <div class="confidence-indicator">
+                            <span class="confidence-label">Confidence</span>
+                            <span class="confidence-value high" id="mviConf">--</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Retrieval Panel -->
+        <section class="retrieval-panel">
+            <div class="retrieval-header">
+                <div class="retrieval-title">
+                    <i class="ri-search-eye-line"></i> Similar Cases
+                </div>
+                <div class="retrieval-controls">
+                    <button class="strategy-btn active" data-strategy="balanced" onclick="setStrategy('balanced')">Balanced</button>
+                    <button class="strategy-btn" data-strategy="morphology" onclick="setStrategy('morphology')">Morphology</button>
+                    <button class="strategy-btn" data-strategy="diagnosis" onclick="setStrategy('diagnosis')">Diagnosis</button>
+                </div>
+            </div>
+            <div class="retrieval-grid" id="retrievalGrid">
+                <div class="retrieval-empty">
+                    <i class="ri-folder-search-line"></i>
+                    Load a slide to find similar cases
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Dropzone Overlay -->
+    <div class="dropzone-overlay" id="dropzone">
+        <div class="dropzone-content">
+            <i class="ri-upload-cloud-2-line"></i>
+            <h3>Drop your WSI file</h3>
+            <p>Supported formats: .svs, .ndpi, .tiff</p>
+        </div>
+    </div>
+
+    <!-- Comparison Modal -->
+    <div class="comparison-modal" id="comparisonModal">
+        <div class="comparison-content">
+            <div class="comparison-header">
+                <div class="comparison-title">Sync-Lock Comparison</div>
+                <button class="close-btn" onclick="closeComparison()"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="comparison-body">
+                <div class="comparison-slide">
+                    <div class="comparison-slide-header">
+                        <div class="comparison-slide-label query">Query Slide</div>
+                        <div class="comparison-slide-name" id="compQueryName">--</div>
+                    </div>
+                    <div class="comparison-slide-canvas" id="compQueryCanvas"></div>
+                </div>
+                <div class="comparison-slide">
+                    <div class="comparison-slide-header">
+                        <div class="comparison-slide-label reference">Reference Slide</div>
+                        <div class="comparison-slide-name" id="compRefName">--</div>
+                    </div>
+                    <div class="comparison-slide-canvas" id="compRefCanvas"></div>
+                </div>
+            </div>
+            <div class="comparison-footer">
+                <div class="comparison-stats">
+                    <div class="comparison-stat">
+                        <div class="comparison-stat-value" id="compSimilarity">--</div>
+                        <div class="comparison-stat-label">Similarity</div>
+                    </div>
+                    <div class="comparison-stat">
+                        <div class="comparison-stat-value match" id="compGradeMatch"></div>
+                        <div class="comparison-stat-label">Grade Match</div>
+                    </div>
+                    <div class="comparison-stat">
+                        <div class="comparison-stat-value match" id="compFibMatch"></div>
+                        <div class="comparison-stat-label">Fibrosis Match</div>
+                    </div>
+                    <div class="comparison-stat">
+                        <div class="comparison-stat-value match" id="compMVIMatch"></div>
+                        <div class="comparison-stat-label">MVI Match</div>
+                    </div>
+                </div>
+                <div class="comparison-actions">
+                    <button class="action-btn secondary" onclick="closeComparison()">Close</button>
+                    <button class="action-btn primary">Add to Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // APPLICATION STATE
+        // ============================================================
+        const API_BASE = 'http://localhost:8000';
+        let state = {
+            currentSlide: null,
+            currentAnalysis: null,
+            retrievedSlides: [],
+            selectedRetrievalIndex: null,
+            currentStrategy: 'balanced'
+        };
+
+        // ============================================================
+        // ZOOM & PAN FUNCTIONALITY
+        // ============================================================
+        let currentZoom = 1;
+        const MIN_ZOOM = 0.1;
+        const MAX_ZOOM = 5;
+        const ZOOM_STEP = 0.25;
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        let currentTranslateX = 0;
+        let currentTranslateY = 0;
+
+        function zoomIn() {
+            if (currentZoom < MAX_ZOOM) {
+                currentZoom += ZOOM_STEP;
+                applyZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (currentZoom > MIN_ZOOM) {
+                currentZoom -= ZOOM_STEP;
+                applyZoom();
+            }
+        }
+
+        function fitToView() {
+            autoFitImage();
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            currentTranslateX = 0;
+            currentTranslateY = 0;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const img = document.getElementById('slideImage');
+            if (img) {
+                img.style.transform = `scale(${currentZoom}) translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+                img.classList.toggle('zoomed', currentZoom > 1);
+            }
+        }
+
+        function toggleFullscreen() {
+            const viewerSection = document.querySelector('.viewer-section');
+            const btn = document.getElementById('fullscreenBtn');
+            if (!viewerSection || !btn) return;
+
+            viewerSection.classList.toggle('fullscreen');
+            const icon = btn.querySelector('i');
+            if (viewerSection.classList.contains('fullscreen')) {
+                icon.className = 'ri-fullscreen-exit-line';
+                btn.title = 'Exit Fullscreen';
+            } else {
+                icon.className = 'ri-fullscreen-line';
+                btn.title = 'Toggle Fullscreen';
+            }
+        }
+
+        function initZoomControls() {
+            const container = document.getElementById('slideCanvas');
+            if (!container) return;
+
+            // Wheel zoom (Ctrl + scroll)
+            container.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) {
+                        zoomIn();
+                    } else {
+                        zoomOut();
+                    }
+                }
+            }, { passive: false });
+
+            // Pan with mouse drag
+            const slideDisplay = document.getElementById('slideDisplay');
+            if (!slideDisplay) return;
+
+            slideDisplay.addEventListener('mousedown', (e) => {
+                // Only enable panning when zoomed AND it's a left-click (not drag)
+                if (currentZoom > 1 && e.button === 0) {
+                    isPanning = true;
+                    panStartX = e.clientX - (currentTranslateX * currentZoom);
+                    panStartY = e.clientY - (currentTranslateY * currentZoom);
+                    slideDisplay.style.cursor = 'grabbing';
+                    // Don't call e.preventDefault() here - it blocks drag & drop
+                }
+            });
+
+
+            document.addEventListener('mousemove', (e) => {
+                if (isPanning) {
+                    currentTranslateX = (e.clientX - panStartX) / currentZoom;
+                    currentTranslateY = (e.clientY - panStartY) / currentZoom;
+                    applyZoom();
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isPanning) {
+                    isPanning = false;
+                    const sd = document.getElementById('slideDisplay');
+                    if (sd) {
+                        sd.style.cursor = currentZoom > 1 ? 'grab' : 'default';
+                    }
+                }
+            });
+
+            // Re-fit image when window is resized
+            window.addEventListener('resize', () => {
+                if (document.getElementById('slideImage')?.src) {
+                    autoFitImage();
+                }
+            });
+        }
+
+        // ============================================================
+        // API FUNCTIONS
+        // ============================================================
+        async function analyzeSlide(filePath) {
+            try {
+                const response = await fetch(`${API_BASE}/api/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: filePath, use_cache: true })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                return generateMockAnalysis(filePath);
+            }
+        }
+
+        async function retrieveSimilar(slideName, topK = 5, strategy = 'balanced') {
+            try {
+                const response = await fetch(`${API_BASE}/api/retrieve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slide_name: slideName, top_k: topK, strategy: strategy })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Retrieval failed:', error);
+                return generateMockRetrieval(slideName);
+            }
+        }
+
+        // ============================================================
+        // MOCK DATA GENERATORS
+        // ============================================================
+        function generateMockAnalysis(filePath) {
+            const slideName = filePath.split('/').pop().split('.')[0] || 'DemoSlide';
+            const gradeProbs = generateProbs(3);
+            const fibProbs = generateProbs(3);
+            const mviProbs = generateProbs(2);
+
+            return {
+                status: 'complete',
+                analysis: {
+                    slide_name: slideName,
+                    slide_type: Math.random() > 0.5 ? 'tumor_dominant' : 'fibrosis_dominant',
+                    source: 'new',
+                    grade: {
+                        distribution: gradeProbs,
+                        predicted_class: gradeProbs.indexOf(Math.max(...gradeProbs)),
+                        confidence: Math.max(...gradeProbs),
+                        class_names: ['G1 (Well)', 'G2 (Moderate)', 'G3 (Poor)']
+                    },
+                    fibrosis: {
+                        distribution: fibProbs,
+                        predicted_class: fibProbs.indexOf(Math.max(...fibProbs)),
+                        confidence: Math.max(...fibProbs),
+                        class_names: ['F0-F1', 'F2-F3', 'F4']
+                    },
+                    mvi: {
+                        distribution: mviProbs,
+                        predicted_class: mviProbs.indexOf(Math.max(...mviProbs)),
+                        confidence: Math.max(...mviProbs),
+                        class_names: ['Absent', 'Present']
+                    },
+                    num_patches: Math.floor(Math.random() * 150 + 50)
+                }
+            };
+        }
+
+        function generateMockRetrieval(slideName) {
+            const samples = ['HCC_2023_001', 'HCC_2023_042', 'HCC_2022_118', 'HCC_2024_007', 'HCC_2023_089'];
+            return {
+                query_slide: slideName,
+                strategy: state.currentStrategy,
+                results: samples.map((name, i) => ({
+                    slide_name: name,
+                    similarity: (0.95 - i * 0.08).toFixed(3),
+                    analysis: generateMockAnalysis(name).analysis
+                }))
+            };
+        }
+
+        function generateProbs(n) {
+            const raw = Array(n).fill(0).map(() => Math.random());
+            const sum = raw.reduce((a, b) => a + b, 0);
+            return raw.map(v => v / sum);
+        }
+
+        // ============================================================
+        // UI UPDATE FUNCTIONS
+        // ============================================================
+        function updateDiagnosisPanel(analysis) {
+            // Update Grade
+            const grade = analysis.grade;
+            const gradePred = document.getElementById('gradePrediction');
+            gradePred.textContent = ['G1', 'G2', 'G3'][grade.predicted_class];
+            gradePred.className = 'card-prediction ' + ['g1', 'g2', 'g3'][grade.predicted_class];
+            grade.distribution.forEach((prob, i) => {
+                document.getElementById('gradeBar' + i).style.width = (prob * 100) + '%';
+                document.getElementById('gradeVal' + i).textContent = (prob * 100).toFixed(0) + '%';
+            });
+            updateConfidence('gradeConf', grade.confidence);
+
+            // Update Fibrosis
+            const fib = analysis.fibrosis;
+            const fibPred = document.getElementById('fibrosisPrediction');
+            fibPred.textContent = ['F0-F1', 'F2-F3', 'F4'][fib.predicted_class];
+            fibPred.className = 'card-prediction ' + ['f0', 'f2', 'f4'][fib.predicted_class];
+            fib.distribution.forEach((prob, i) => {
+                document.getElementById('fibBar' + i).style.width = (prob * 100) + '%';
+                document.getElementById('fibVal' + i).textContent = (prob * 100).toFixed(0) + '%';
+            });
+            updateConfidence('fibConf', fib.confidence);
+
+            // Update MVI
+            const mvi = analysis.mvi;
+            const mviPred = document.getElementById('mviPrediction');
+            mviPred.textContent = ['Absent', 'Present'][mvi.predicted_class];
+            mviPred.className = 'card-prediction ' + ['absent', 'present'][mvi.predicted_class];
+            mvi.distribution.forEach((prob, i) => {
+                document.getElementById('mviBar' + i).style.width = (prob * 100) + '%';
+                document.getElementById('mviVal' + i).textContent = (prob * 100).toFixed(0) + '%';
+            });
+            updateConfidence('mviConf', mvi.confidence);
+
+            // Show MVI alert if positive
+            const mviAlert = document.getElementById('mviAlert');
+            if (mvi.predicted_class === 1 && mvi.confidence > 0.6) {
+                mviAlert.classList.add('visible');
+            } else {
+                mviAlert.classList.remove('visible');
+            }
+        }
+
+        function updateConfidence(elementId, confidence) {
+            const el = document.getElementById(elementId);
+            el.textContent = (confidence * 100).toFixed(0) + '%';
+            el.className = 'confidence-value ' + (confidence > 0.8 ? 'high' : confidence > 0.6 ? 'medium' : 'low');
+        }
+
+        function updateRetrievalGrid(results) {
+            const grid = document.getElementById('retrievalGrid');
+            if (!results || results.length === 0) {
+                grid.innerHTML = '<div class="retrieval-empty"><i class="ri-folder-search-line"></i> No similar cases found</div>';
+                return;
+            }
+            
+            // Normalize results to ensure consistent property names
+            state.retrievedSlides = results.map(r => ({
+                ...r,
+                slidename: r.slide_name || r.slidename  // Normalize to slidename
+            }));
+            
+            grid.innerHTML = state.retrievedSlides.map((result, index) => {
+                const a = result.analysis;
+                const gradeTag = ['G1', 'G2', 'G3'][a.grade.predictedclass];
+                const fibTag = ['F0-F1', 'F2-F3', 'F4'][a.fibrosis.predictedclass];
+                const mviTag = a.mvi.predictedclass === 1 ? 'MVI+' : 'MVI-';
+                const mviClass = a.mvi.predictedclass === 1 ? 'mvi-pos' : 'mvi-neg';
+                const thumbUrl = `${API_BASE}/api/thumbnail/${result.slidename}?size=256`;
+                
+                return `
+                    <div class="retrieval-card" onclick="selectRetrieval(${index})" data-index="${index}">
+                        <div class="retrieval-thumbnail">
+                            <img src="${thumbUrl}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" alt="${result.slidename}">
+                            <div class="thumb-placeholder" style="display: none"><i class="ri-image-line"></i></div>
+                            <div class="similarity-badge">${(result.similarity * 100).toFixed(0)}%</div>
+                        </div>
+                        <div class="retrieval-info">
+                            <div class="retrieval-name">${result.slidename}</div>
+                            <div class="retrieval-tags">
+                                <span class="retrieval-tag grade">${gradeTag}</span>
+                                <span class="retrieval-tag fibrosis">${fibTag}</span>
+                                <span class="retrieval-tag ${mviClass}">${mviTag}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadSlideImage(slideName) {
+            const img = document.getElementById('slideImage');
+            if (!img) return;
+        
+            img.onload = () => {
+                img.classList.remove('loading');
+                // Auto-fit the image to container
+                autoFitImage();
+            };
+            img.onerror = () => {
+                img.style.display = 'none';
+            };
+            img.classList.add('loading');
+            img.style.display = 'block';
+            img.src = `${API_BASE}/api/thumbnail/${slideName}?size=1024`;
+        }
+        
+        function autoFitImage() {
+            const img = document.getElementById('slideImage');
+            const container = document.getElementById('slideDisplay');
+            if (!img || !container || !img.naturalWidth) return;
+        
+            // Get container dimensions
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+        
+            // Get image natural dimensions
+            const imgWidth = img.naturalWidth;
+            const imgHeight = img.naturalHeight;
+        
+            // Calculate scale to fit container with some padding (95% of container)
+            const scaleX = (containerWidth * 0.95) / imgWidth;
+            const scaleY = (containerHeight * 0.95) / imgHeight;
+        
+            // Use the smaller scale to ensure image fits
+            const fitScale = Math.min(scaleX, scaleY); // Allow scale < 1 to fit large images
+        
+            // Set the initial zoom to fit
+            currentZoom = fitScale;
+            currentTranslateX = 0;
+            currentTranslateY = 0;
+            applyZoom();
+        }
+
+        // ============================================================
+        // EVENT HANDLERS
+        // ============================================================
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            await loadSlide(file.name);
+        }
+
+        async function loadSlide(filePath) {
+            document.getElementById('viewerLoading').classList.add('active');
+            document.getElementById('slidePlaceholder').style.display = 'none';
+            document.getElementById('slideDisplay').style.display = 'flex';
+            resetZoom();
+
+            const slideName = filePath.split('/').pop().split('.')[0];
+            document.getElementById('currentSlideName').textContent = slideName;
+
+            const result = await analyzeSlide(filePath);
+
+            if (result.status === 'complete') {
+                state.currentSlide = slideName;
+                state.currentAnalysis = result.analysis;
+
+                updateDiagnosisPanel(result.analysis);
+
+                const badge = document.getElementById('slideBadge');
+                badge.style.display = 'inline';
+                badge.textContent = result.analysis.source === 'validated' ? 'Validated' : 'New';
+                badge.className = 'slide-badge ' + result.analysis.source;
+
+                loadSlideImage(slideName);
+
+                const retrieval = await retrieveSimilar(slideName, 5, state.currentStrategy);
+                updateRetrievalGrid(retrieval.results);
+            }
+
+            document.getElementById('viewerLoading').classList.remove('active');
+        }
+
+        function selectDiagnosis(type) {
+            document.querySelectorAll('.diagnosis-card').forEach(card => card.classList.remove('active'));
+            document.getElementById(type + 'Card').classList.add('active');
+        }
+
+        async function setStrategy(strategy) {
+            state.currentStrategy = strategy;
+            document.querySelectorAll('.strategy-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.strategy === strategy);
+            });
+
+            if (state.currentSlide) {
+                const retrieval = await retrieveSimilar(state.currentSlide, 5, strategy);
+                updateRetrievalGrid(retrieval.results);
+            }
+        }
+
+        function selectRetrieval(index) {
+            document.querySelectorAll('.retrieval-card').forEach((card, i) => {
+                card.classList.toggle('selected', i === index);
+            });
+            state.selectedRetrievalIndex = index;
+            openComparison(state.retrievedSlides[index]);
+        }
+
+        function openComparison(retrievedSlide) {
+            // Defensive check
+            if (!retrievedSlide) {
+                console.error('No retrieved slide data');
+                return;
+            }
+            
+            const modal = document.getElementById('comparisonModal');
+            modal.classList.add('active');
+            
+            // Handle both slide_name and slidename property names
+            const refSlideName = retrievedSlide.slide_name || retrievedSlide.slidename;
+            
+            document.getElementById('compQueryName').textContent = state.currentSlide || '--';
+            document.getElementById('compRefName').textContent = refSlideName || '--';
+            document.getElementById('compSimilarity').textContent = retrievedSlide.similarity ? (retrievedSlide.similarity * 100).toFixed(0) : '--';
+            
+            const qa = state.currentAnalysis;
+            const ra = retrievedSlide.analysis;
+            if (qa && ra) {
+                updateMatchIndicator('compGradeMatch', qa.grade.predictedclass === ra.grade.predictedclass);
+                updateMatchIndicator('compFibMatch', qa.fibrosis.predictedclass === ra.fibrosis.predictedclass);
+                updateMatchIndicator('compMVIMatch', qa.mvi.predictedclass === ra.mvi.predictedclass);
+            }
+            
+            // Load slide images into comparison canvases
+            const queryCanvas = document.getElementById('compQueryCanvas');
+            const refCanvas = document.getElementById('compRefCanvas');
+            
+            // Create query image
+            queryCanvas.innerHTML = '';
+            if (state.currentSlide) {
+                const queryImg = document.createElement('img');
+                queryImg.src = API_BASE + '/api/thumbnail/' + state.currentSlide + '?size=1024';
+                queryImg.alt = 'Query Slide';
+                queryImg.onerror = function() { this.style.display = 'none'; };
+                queryCanvas.appendChild(queryImg);
+            }
+            
+            // Create reference image
+            refCanvas.innerHTML = '';
+            if (refSlideName) {
+                const refImg = document.createElement('img');
+                refImg.src = API_BASE + '/api/thumbnail/' + refSlideName + '?size=1024';
+                refImg.alt = 'Reference Slide';
+                refImg.onerror = function() { this.style.display = 'none'; };
+                refCanvas.appendChild(refImg);
+            }
+        }
+
+        
+
+        function updateMatchIndicator(elementId, isMatch) {
+            const el = document.getElementById(elementId);
+            el.textContent = isMatch ? '✓' : '✗';
+            el.className = 'comparison-stat-value ' + (isMatch ? 'match' : 'mismatch');
+        }
+
+        function closeComparison() {
+            document.getElementById('comparisonModal').classList.remove('active');
+        }
+
+        async function showDatabaseStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/database/stats`);
+                const stats = await response.json();
+                const gradeInfo = stats.grade_distribution ?
+                    `G1:${stats.grade_distribution.G1}, G2:${stats.grade_distribution.G2}, G3:${stats.grade_distribution.G3}` : 'N/A';
+                const mviInfo = stats.mvi_distribution ?
+                    `${stats.mvi_distribution.Positive} MVI positive, ${stats.mvi_distribution.Negative} MVI negative` : 'N/A';
+                alert(`Database contains ${stats.total_slides} validated slides.\nDistribution: ${gradeInfo}\n${mviInfo}`);
+            } catch (error) {
+                alert('Could not fetch database stats.');
+            }
+        }
+
+        // ============================================================
+        // DRAG & DROP
+        // ============================================================
+        const dropzone = document.getElementById('dropzone');
+        
+        // Prevent default drag behaviors on the whole document
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+        
+        // Show dropzone on drag enter/over
+        ['dragenter', 'dragover'].forEach(eventName => {
+            document.body.addEventListener(eventName, () => {
+                dropzone.classList.add('active');
+            }, false);
+        });
+        
+        // Hide dropzone on drag leave
+        document.body.addEventListener('dragleave', (e) => {
+            // Only hide if leaving the window entirely
+            if (!e.relatedTarget || e.relatedTarget.nodeName === 'HTML') {
+                dropzone.classList.remove('active');
+            }
+        }, false);
+        
+        // Handle the drop
+        dropzone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzone.classList.remove('active');
+            
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                console.log('Dropped file:', file.name);
+                await loadSlide(file.name);
+            }
+        }, false);
+
+
+        // ============================================================
+        // KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const vs = document.querySelector('.viewer-section');
+                if (vs.classList.contains('fullscreen')) {
+                    toggleFullscreen();
+                } else {
+                    closeComparison();
+                }
+            }
+            if (e.key === '+' || e.key === '=') {
+                zoomIn();
+            }
+            if (e.key === '-') {
+                zoomOut();
+            }
+            if (e.key === '0') {
+                fitToView();
+            }
+            if (e.key === 'f' && !e.ctrlKey) {
+                toggleFullscreen();
+            }
+        });
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        window.addEventListener('load', () => {
+            initZoomControls();
+            // Optional: auto-load demo slide
+            // loadSlide('demo_slide.svs');
+        });
+    </script>
+</body>
+</html>
