@@ -204,11 +204,11 @@ class MockSlideAnalysis:
         dist = np.random.dirichlet(np.ones(n) * 0.5).tolist()
         pred = int(np.argmax(dist))
         return {
-            'distribution': dist,
-            'predicted_class': pred,
-            'confidence': float(max(dist)),
-            'class_names': names,
-            'ground_truth': np.random.choice([0, 1, 2, None][:n])
+            "distribution": dist,
+            "predicted_class": pred,  # underscore
+            "confidence": float(max(dist)),
+            "class_names": names,      # no underscore
+            "ground_truth": np.random.choice([0, 1, 2, None])[:n]
         }
 
     def to_dict(self):
@@ -480,14 +480,17 @@ class ProductionSystem:
 
     def get_all_slides(self) -> List[Dict]:
         self._init_system()
-        return [{
-            'slide_name': name,
-            'grade': analysis.grade.class_names[analysis.grade.predicted_class],
-            'fibrosis': analysis.fibrosis.class_names[analysis.fibrosis.predicted_class],
-            'mvi': analysis.mvi.class_names[analysis.mvi.predicted_class],
-            'slide_type': analysis.slide_type
-        } for name, analysis in self._cache.items()]
-
+        return [
+            {
+                "slide_name": name,
+                "slidename": name,
+                "grade": analysis.grade.class_names[analysis.grade.predicted_class],
+                "fibrosis": analysis.fibrosis.class_names[analysis.fibrosis.predicted_class],
+                "mvi": analysis.mvi.class_names[analysis.mvi.predicted_class],
+                "slide_type": analysis.slide_type
+            }
+            for name, analysis in self._cache.items()
+        ]
 
 # ============================================================================
 # FASTAPI APPLICATION
@@ -573,15 +576,35 @@ async def stats():
         'mvi_distribution': {'Negative': 7, 'Positive': 5}
     }
 
-
 @app.get("/api/database/slides")
 async def list_slides():
-    if isinstance(system, ProductionSystem):
-        return {'slides': system.get_all_slides()}
-
-    slides = database.slides if database else {}
-    return {'slides': [{'slide_name': n, 'grade': s.grade['class_names'][s.grade['predicted_class']]}
-                       for n, s in slides.items()]}
+    try:
+        if isinstance(system, ProductionSystem):
+            system._init_system()  # Ensure system is initialized
+            slides = system.get_all_slides()
+            print(f"Returning {len(slides)} slides from production database")
+            return slides
+        
+        # Demo mode
+        slides = database.slides if database else {}
+        result = [
+            {
+                'slide_name': n,
+                'slidename': n,
+                'grade': s.grade['class_names'][s.grade['predicted_class']],
+                'fibrosis': s.fibrosis['class_names'][s.fibrosis['predicted_class']],
+                'mvi': s.mvi['class_names'][s.mvi['predicted_class']],
+                'slide_type': s.slide_type
+            }
+            for n, s in slides.items()
+        ]
+        print(f"Returning {len(result)} slides from demo database")
+        return result
+    except Exception as e:
+        print(f"Error in list_slides: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
