@@ -1,27 +1,15 @@
 # PathoFocus - Requirements
 # =========================
 
-# Backend Framework
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-python-multipart>=0.0.6
-
-# Deep Learning
-torch>=2.0.0
-timm>=0.9.0
-peft>=0.6.0
-
-# Image Processing
-openslide-python>=1.3.0
-Pillow>=10.0.0
-torchvision>=0.15.0
-
-# Data Processing
+# Core (required for demo mode)
+fastapi>=0.100.0
+uvicorn>=0.23.0
 numpy>=1.24.0
-pandas>=2.0.0
-scipy>=1.11.0
-tqdm>=4.66.0
+pydantic>=2.0.0
 
-# Optional: For production deployment
-# gunicorn>=21.0.0
-# python-dotenv>=1.0.0
+# Production mode
+torch>=2.0.0
+torchvision>=0.15.0
+timm>=0.9.0
+Pillow>=10.0.0
+openslide-python>=1.3.0
