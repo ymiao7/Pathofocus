@@ -49,6 +49,13 @@ class ProductionConfig:
             "15": Path("../../WSI_HCC/WSI_HCC_2015"),
             "16": Path("../../WSI_HCC/WSI_HCC_2016"),
         }
+        
+        # Where annotation files (.geojson) are stored - also by year
+        self.annotation_roots = {
+            "13": Path("../../WSI_HCC/WSI_HCC_2013_annotations"),
+            "15": Path("../../WSI_HCC/WSI_HCC_2015_annotations"),
+            "16": Path("../../WSI_HCC/WSI_HCC_2016_annotations"),
+        }
 
         # Thumbnail cache directory
         self.thumbnail_cache = Path("./thumbnail_cache")
@@ -224,7 +231,6 @@ class MockSlideAnalysis:
             'attention_weights': self.attention_weights
         }
 
-
 class MockDatabase:
     def __init__(self):
         names = [f'HCC_{y}_{str(i).zfill(3)}' for y in [2022, 2023, 2024] for i in range(1, 5)]
@@ -253,7 +259,6 @@ def load_ground_truth_from_json(annotation_root: Path, slide_name: str) -> Dict:
     """Load ground truth labels from *_patch_info.json files"""
     possible_paths = [
         annotation_root / f"{slide_name}_patch_info.json",
-        annotation_root / f"{slide_name}.json",
     ]
 
     json_path = None
@@ -393,7 +398,17 @@ class ProductionSystem:
             coords = analysis.coords[:30]
 
         gt = self._gt_cache.get(analysis.slide_name, {})
-
+        has_annotation = bool(gt)
+        
+        # Create annotation-based labels
+        annotation_labels = None
+        if has_annotation:
+            annotation_labels = {
+                'grade': gt.get('grade'),
+                'fibrosis': gt.get('fibrosis'),
+                'mvi': gt.get('mvi'),
+            }
+        
         return {
             'slide_name': analysis.slide_name,
             'slide_type': analysis.slide_type,
@@ -403,9 +418,13 @@ class ProductionSystem:
             'mvi': pred_to_dict(analysis.mvi, gt.get('mvi')),
             'num_patches': analysis.num_patches,
             'coords': coords,
-            'attention_weights': [1.0/max(1, len(coords))] * len(coords)
+            'attention_weights': [1.0/max(1, len(coords))] * len(coords),
+            'has_annotation': has_annotation,           # NEW
+            'annotation_labels': annotation_labels,     # NEW
         }
 
+
+    
     def analyze(self, file_path: str, use_cache: bool = True) -> Dict:
         self._init_system()
         slide_name = Path(file_path).stem
@@ -491,6 +510,38 @@ class ProductionSystem:
             }
             for name, analysis in self._cache.items()
         ]
+
+    def get_all_slides(self) -> List[Dict]:
+        self._init_system()
+        result = []
+        for name, analysis in self._cache.items():
+            gt = self._gt_cache.get(name, {})
+            has_annotation = bool(gt)
+            
+            # Use ground truth if available, otherwise use AI prediction
+            if has_annotation:
+                grade_idx = gt.get('grade')
+                fibrosis_idx = gt.get('fibrosis')
+                mvi_idx = gt.get('mvi')
+                grade = ['G1 (Well)', 'G2 (Moderate)', 'G3 (Poor)'][grade_idx] if grade_idx is not None else '--'
+                fibrosis = ['F0-F1 (Minimal)', 'F2-F3 (Moderate)', 'F4 (Cirrhosis)'][fibrosis_idx] if fibrosis_idx is not None else '--'
+                mvi = 'Present' if mvi_idx == 1 else 'Absent' if mvi_idx == 0 else '--'
+            else:
+                grade = analysis.grade.class_names[analysis.grade.predicted_class]
+                fibrosis = analysis.fibrosis.class_names[analysis.fibrosis.predicted_class]
+                mvi = analysis.mvi.class_names[analysis.mvi.predicted_class]
+            
+            result.append({
+                'slidename': name,
+                'slide_name': name,
+                'grade': grade,
+                'fibrosis': fibrosis,
+                'mvi': mvi,
+                'slide_type': analysis.slide_type,
+                'has_annotation': has_annotation,  # NEW: flag for frontend
+            })
+        return result
+
 
 # ============================================================================
 # FASTAPI APPLICATION
@@ -635,6 +686,154 @@ async def get_region(slide_name: str, x: int = 0, y: int = 0,
     raise HTTPException(status_code=404, detail=f"Region not found for {slide_name}")
 
 
+@app.get("/api/annotations/{slide_name}")
+async def get_annotations(slide_name: str):
+    """Get annotation polygons from GeoJSON files for a slide"""
+    print(f"=== GET ANNOTATIONS: {slide_name} ===")
+    
+    if isinstance(system, ProductionSystem):
+        # Extract year prefix from slide name (e.g., "13-310-A1" -> "13")
+        year_prefix = slide_name.split('-')[0]
+        
+        annotation_root = system.config.annotation_roots.get(year_prefix)
+        wsi_root = system.config.wsi_roots.get(year_prefix)
+        
+        if not annotation_root:
+            print(f"  ERROR: Unknown year prefix '{year_prefix}'")
+            return {"annotations": [], "dimensions": None}
+        
+        # Try multiple filename patterns
+        name_variants = [
+            slide_name,
+            slide_name.replace(' ', '_'),
+            slide_name.replace(' ', '-'),
+            slide_name.replace('_', ' '),
+        ]
+        
+        geojson_path = None
+        for name in name_variants:
+            possible_paths = [
+                annotation_root / f"{name}.geojson",
+                annotation_root / f"{name}.json",
+            ]
+            for p in possible_paths:
+                print(f"  Checking: {p}")
+                if p.exists():
+                    geojson_path = p
+                    print(f"  FOUND: {p}")
+                    break
+            if geojson_path:
+                break
+        
+        if not geojson_path:
+            print(f"  ERROR: No annotation file found for {slide_name}")
+            return {"annotations": [], "dimensions": None}
+
+        # Parse GeoJSON
+        try:
+            with open(geojson_path, 'r') as f:
+                geojson_data = json.load(f)
+        except Exception as e:
+            printf(f"ERROR parsing GeoJSON: {e}")
+            return {"annotations": [], "dimensions": None}
+        
+        # Handle different GeoJSON structures
+        if isinstance(geojson_data, dict):
+            if geojson_data.get('type') == 'FeatureCollection':
+                features = geojson_data.get('features', [])
+            elif geojson_data.get('type') == 'Feature':
+                features = [geojson_data]  # Wrap single feature in list
+            else:
+                features = []
+        elif isinstance(geojson_data, list):
+            features = geojson_data
+        else:
+            features = []
+        
+        annotations = []
+        for feature in features:
+            if not isinstance(feature, dict) or feature.get('type') != 'Feature':
+                continue
+            # ... rest of the parsing code
+
+            
+            geometry = feature.get('geometry', {})
+            properties = feature.get('properties', {})
+            classification = properties.get('classification', {})
+            
+            label = classification.get('name', 'Unknown')
+            color = classification.get('color', [128, 128, 128])
+            
+            # Determine annotation type
+            label_lower = label.lower()
+            if 'mvi' in label_lower:
+                ann_type = 'mvi'
+            elif 'tumor' in label_lower or label.startswith('G'):
+                ann_type = 'tumor'
+            elif 'fibrosis' in label_lower or label.startswith('S'):
+                ann_type = 'fibrosis'
+            elif 'necrosis' in label_lower:
+                ann_type = 'necrosis'
+            else:
+                ann_type = 'other'
+            
+            geom_type = geometry.get('type', '')
+            coords = geometry.get('coordinates', [])
+            
+            if geom_type == 'Polygon':
+                annotations.append({
+                    "id": feature.get('id', ''),
+                    "type": ann_type,
+                    "geometry_type": "Polygon",
+                    "coordinates": coords,
+                    "label": label,
+                    "color": color
+                })
+            elif geom_type == 'LineString':
+                annotations.append({
+                    "id": feature.get('id', ''),
+                    "type": ann_type,
+                    "geometry_type": "LineString",
+                    "coordinates": [coords],  # Wrap to match polygon format
+                    "label": label,
+                    "color": color
+                })
+            elif geom_type == 'MultiPolygon':
+                for poly_coords in coords:
+                    annotations.append({
+                        "id": feature.get('id', ''),
+                        "type": ann_type,
+                        "geometry_type": "Polygon",
+                        "coordinates": poly_coords,
+                        "label": label,
+                        "color": color
+                    })
+        
+        # Get WSI dimensions from corresponding WSI file
+        dimensions = None
+        if wsi_root:
+            for name in name_variants:
+                for ext in ['.svs', '.ndpi', '.tiff']:
+                    wsi_path = wsi_root / f"{name}{ext}"
+                    if wsi_path.exists():
+                        try:
+                            import openslide
+                            slide = openslide.OpenSlide(str(wsi_path))
+                            dimensions = {"width": slide.dimensions[0], "height": slide.dimensions[1]}
+                            slide.close()
+                            print(f"  WSI dimensions: {dimensions}")
+                        except Exception as e:
+                            print(f"  ERROR getting WSI dimensions: {e}")
+                        break
+                if dimensions:
+                    break
+        
+        print(f"  Returning {len(annotations)} annotations")
+        return {"annotations": annotations, "dimensions": dimensions}
+    
+    return {"annotations": [], "dimensions": None}
+
+    
 # ============================================================================
 # MAIN
 # ============================================================================

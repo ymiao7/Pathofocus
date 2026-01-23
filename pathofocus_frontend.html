@@ -193,6 +193,41 @@
             color: var(--accent-info);
         }
 
+        /* Navigation history back button */
+        .nav-back-btn {
+            display: none;  /* Hidden by default */
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-primary-dim);
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            margin-right: 8px;
+        }
+        
+        .nav-back-btn.visible {
+            display: flex;
+        }
+        
+        .nav-back-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+        
+        .nav-back-btn .back-slide-name {
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            opacity: 0.8;
+            font-size: 11px;
+        }
+        
         .viewer-tools {
             display: flex;
             gap: 4px;
@@ -301,6 +336,133 @@
             opacity: 0.5;
         }
 
+        /* ANNOTATION SVG OVERLAY */
+        .annotation-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: visible;
+        }
+        
+        .annotation-polygon {
+            fill-opacity: 0.25;
+            stroke-width: 2;
+            stroke-opacity: 0.9;
+            transition: fill-opacity 0.15s ease, stroke-opacity 0.15s ease;
+        }
+        
+        .annotation-polygon:hover {
+            fill-opacity: 0.4;
+            stroke-opacity: 1;
+        }
+        
+        .annotation-polygon.tumor {
+            fill: #f59e0b;
+            stroke: #f59e0b;
+        }
+        
+        .annotation-polygon.mvi {
+            fill: #ef4444;
+            stroke: #ef4444;
+        }
+        
+        .annotation-polygon.fibrosis {
+            fill: #6366f1;
+            stroke: #6366f1;
+        }
+        
+        .annotation-polygon.necrosis {
+            fill: #6b7280;
+            stroke: #6b7280;
+        }
+        
+        .annotation-polygon.other {
+            fill: #10b981;
+            stroke: #10b981;
+        }
+        
+        /* Annotation Legend */
+        .annotation-legend {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(22, 22, 29, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            z-index: 20;
+            display: none;
+        }
+        
+        .annotation-legend.visible {
+            display: block;
+        }
+        
+        .annotation-legend-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        
+        .annotation-legend-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .annotation-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+        
+        .annotation-legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+        }
+        
+        .annotation-legend-color.tumor {
+            background: #f59e0b;
+        }
+        
+        .annotation-legend-color.fibrosis {
+            background: #6366f1;
+        }
+        
+        .annotation-legend-color.mvi {
+            background: #ef4444;
+        }
+        
+        .annotation-legend-label {
+            white-space: nowrap;
+        }
+        
+        .annotation-legend-count {
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-left: auto;
+        }
+        
+        /* Toggle button for annotations */
+        .tool-btn.annotations-active {
+            background: var(--accent-primary-dim);
+            color: var(--accent-primary);
+        }
+        
+
         /* Fullscreen mode */
         .viewer-section.fullscreen {
             position: fixed;
@@ -347,6 +509,35 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-secondary);
+        }
+
+        .source-toggle {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        .toggle-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition-fast);
+        }
+        .toggle-btn:hover {
+            border-color: var(--border-light);
+            color: var(--text-primary);
+        }
+        .toggle-btn.active {
+            background: var(--accent-primary-dim);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
         }
 
         .diagnosis-cards {
@@ -1237,6 +1428,51 @@
             object-fit: contain;
         }
 
+        /* Clickable reference slide in comparison modal */
+        .comparison-slide.clickable {
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        
+        .comparison-slide.clickable:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .comparison-slide.clickable .comparison-slide-header {
+            pointer-events: none; /* Let clicks pass through to parent */
+        }
+        
+        .comparison-slide.clickable .comparison-slide-name {
+            pointer-events: auto;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        
+        .comparison-slide.clickable .comparison-slide-name:hover {
+            color: var(--accent-success);
+            text-decoration: underline;
+        }
+        
+        .comparison-slide.clickable .comparison-slide-canvas img {
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+        
+        .comparison-slide.clickable .comparison-slide-canvas img:hover {
+            opacity: 0.85;
+            box-shadow: 0 0 0 3px var(--accent-success);
+            border-radius: var(--radius-md);
+        }
+        
+        /* Add a hint icon next to reference label */
+        .comparison-slide.clickable .comparison-slide-label::after {
+            content: " \f106"; /* ri-external-link-line */
+            font-family: "remixicon";
+            font-size: 10px;
+            opacity: 0.6;
+            margin-left: 6px;
+        }
+
         .comparison-footer {
             padding: 16px 24px;
             border-top: 1px solid var(--border-subtle);
@@ -1328,6 +1564,11 @@
             <section class="viewer-section">
                 <div class="viewer-toolbar">
                     <div class="slide-info">
+                        <button class="nav-back-btn" id="navBackBtn" onclick="goBackSlide()" title="Go back to previous slide">
+                            <i class="ri-arrow-left-line"></i>
+                            <span>Back</span>
+                            <span class="back-slide-name" id="backSlideName"></span>
+                        </button>
                         <span class="slide-name" id="currentSlideName">No slide loaded</span>
                         <span class="slide-badge validated" id="slideBadge" style="display:none">Validated</span>
                     </div>
@@ -1336,6 +1577,7 @@
                         <button class="tool-btn" id="zoomOutBtn" title="Zoom Out" onclick="zoomOut()"><i class="ri-zoom-out-line"></i></button>
                         <button class="tool-btn" id="fitViewBtn" title="Fit to View" onclick="fitToView()"><i class="ri-aspect-ratio-line"></i></button>
                         <button class="tool-btn" id="fullscreenBtn" title="Toggle Fullscreen" onclick="toggleFullscreen()"><i class="ri-fullscreen-line"></i></button>
+                        <button class="tool-btn" id="toggleAnnotationsBtn" title="Toggle Annotations" onclick="toggleAnnotations()"><i class="ri-map-pin-line"></i></button>
                     </div>
                 </div>
 
@@ -1347,6 +1589,11 @@
                         </div>
                         <div class="slide-display" id="slideDisplay" style="display: none;">
                             <img id="slideImage" class="slide-image" src="" alt="WSI Thumbnail" />
+                            <div class="annotation-overlay" id="annotationOverlay"></div>
+                            <div class="annotation-legend" id="annotationLegend">
+                                <div class="annotation-legend-title">Annotations</div>
+                                <div class="annotation-legend-items" id="annotationLegendItems"></div>
+                            </div>
                         </div>
                     </div>
                     <div class="loading-overlay" id="viewerLoading">
@@ -1359,7 +1606,15 @@
             <!-- Diagnosis Panel -->
             <aside class="diagnosis-panel">
                 <div class="panel-header">
-                    <div class="panel-title">AI Diagnosis</div>
+                    <div class="panel-title" id="panelTitle">AI Diagnosis</div>
+                    <div class="source-toggle" id="sourceToggle" style="display: none;">
+                        <button class="toggle-btn active" data-source="annotation" onclick="setDiagnosisSource('annotation')">
+                            <i class="ri-file-text-line"></i> Annotation
+                        </button>
+                        <button class="toggle-btn" data-source="ai" onclick="setDiagnosisSource('ai')">
+                            <i class="ri-robot-line"></i> AI
+                        </button>
+                    </div>
                 </div>
 
                 <!-- MVI Alert -->
@@ -1518,7 +1773,7 @@
                     </div>
                     <div class="comparison-slide-canvas" id="compQueryCanvas"></div>
                 </div>
-                <div class="comparison-slide">
+                <div class="comparison-slide clickable" id="compRefSlide">
                     <div class="comparison-slide-header">
                         <div class="comparison-slide-label reference">Reference Slide</div>
                         <div class="comparison-slide-name" id="compRefName">--</div>
@@ -1544,10 +1799,6 @@
                         <div class="comparison-stat-value match" id="compMVIMatch"></div>
                         <div class="comparison-stat-label">MVI Match</div>
                     </div>
-                </div>
-                <div class="comparison-actions">
-                    <button class="action-btn secondary" onclick="closeComparison()">Close</button>
-                    <button class="action-btn primary">Add to Report</button>
                 </div>
             </div>
         </div>
@@ -1640,7 +1891,259 @@
             selectedRetrievalIndex: null,
             currentStrategy: 'balanced'
         };
+        
+        // ANNOTATION STATE
+        let diagnosisSource = 'annotation'; // 'annotation' or 'ai'
+        let annotationsVisible = true;
+        let currentAnnotations = null;
+        let currentDimensions = null;
+        let imageLoaded = false;
+        let annotationsLoaded = false;
 
+        let slideHistory = [];           // Stack of previously viewed slides
+        let maxHistorySize = 10;         // Limit history size
+        let querySlideContext = null;    // Store query slide when navigating from comparison
+        
+        // ANNOTATION FUNCTIONS
+        async function loadAnnotations(slideName) {
+            annotationsLoaded = false;
+            currentAnnotations = null;
+            currentDimensions = null;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/annotations/${slideName}`);
+                const data = await response.json();
+                
+                console.log(`Annotations for ${slideName}:`, data);
+                
+                currentAnnotations = data.annotations || [];
+                currentDimensions = data.dimensions;
+                annotationsLoaded = true;
+                
+                // Only render if image is also loaded
+                if (imageLoaded) {
+                    renderAnnotations();
+                    updateAnnotationLegend();
+                }
+            } catch (error) {
+                console.error('Failed to load annotations:', error);
+                currentAnnotations = [];
+                currentDimensions = null;
+                annotationsLoaded = true;
+            }
+        }
+        
+        function renderAnnotations() {
+            const container = document.getElementById('slideDisplay');
+            const img = document.getElementById('slideImage');
+            
+            // Remove existing SVG overlay
+            const existingSvg = container.querySelector('.annotation-svg');
+            if (existingSvg) existingSvg.remove();
+            
+            if (!currentAnnotations || currentAnnotations.length === 0) {
+                console.log('No annotations to render');
+                updateAnnotationLegend();
+                return;
+            }
+            
+            if (!annotationsVisible) {
+                console.log('Annotations not visible');
+                updateAnnotationLegend();
+                return;
+            }
+            
+            if (!img || !img.naturalWidth) {
+                console.log('Image not loaded');
+                return;
+            }
+            
+            if (!currentDimensions) {
+                console.log('No WSI dimensions available');
+                return;
+            }
+            
+            // Calculate scaling from WSI coordinates to thumbnail coordinates
+            const scaleX = img.naturalWidth / currentDimensions.width;
+            const scaleY = img.naturalHeight / currentDimensions.height;
+            
+            console.log('Rendering annotations', {
+                count: currentAnnotations.length,
+                scaleX, scaleY,
+                wsiDimensions: currentDimensions,
+                imgDimensions: { width: img.naturalWidth, height: img.naturalHeight }
+            });
+            
+            // Create SVG overlay
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('annotation-svg');
+            svg.setAttribute('viewBox', `0 0 ${img.naturalWidth} ${img.naturalHeight}`);
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            
+            // Render each annotation as a path (supports holes with fill-rule evenodd)
+            currentAnnotations.forEach((ann, idx) => {
+                if (!ann.coordinates || ann.coordinates.length === 0) return;
+                
+                // Build SVG path data supporting holes
+                // For a polygon with holes: first ring is outer boundary, subsequent rings are holes
+                // Using 'evenodd' fill-rule, we can draw all rings in one path
+                const rings = ann.coordinates;
+                let pathData = '';
+                
+                rings.forEach((ring, ringIdx) => {
+                    if (!ring || ring.length < 3) return;
+                    
+                    // Convert WSI coordinates to thumbnail coordinates
+                    ring.forEach((coord, coordIdx) => {
+                        const x = coord[0] * scaleX;
+                        const y = coord[1] * scaleY;
+                        
+                        if (coordIdx === 0) {
+                            // Move to first point
+                            pathData += `M ${x} ${y} `;
+                        } else {
+                            // Line to subsequent points
+                            pathData += `L ${x} ${y} `;
+                        }
+                    });
+                    
+                    // Close the ring
+                    pathData += 'Z ';
+                });
+                
+                if (!pathData) return;
+                
+                // Create path element instead of polygon
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('fill-rule', 'evenodd'); // This makes holes work!
+                path.classList.add('annotation-polygon', ann.type);
+                path.setAttribute('data-label', ann.label);
+                path.setAttribute('data-idx', idx);
+                
+                // Use custom color if provided
+                if (ann.color && Array.isArray(ann.color)) {
+                    const [r, g, b] = ann.color;
+                    path.style.fill = `rgb(${r}, ${g}, ${b})`;
+                    path.style.stroke = `rgb(${r}, ${g}, ${b})`;
+                }
+                
+                svg.appendChild(path);
+            });
+            
+            // Position SVG to match the image exactly
+            svg.style.position = 'absolute';
+            svg.style.left = `${img.offsetLeft}px`;
+            svg.style.top = `${img.offsetTop}px`;
+            svg.style.width = `${img.offsetWidth}px`;
+            svg.style.height = `${img.offsetHeight}px`;
+            svg.style.transform = `scale(${currentZoom}) translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+            svg.style.transformOrigin = 'center center';
+            
+            container.appendChild(svg);
+            updateAnnotationLegend();
+        }
+
+        function updateAnnotationLegend() {
+            const legend = document.getElementById('annotationLegend');
+            const legendItems = document.getElementById('annotationLegendItems');
+            
+            if (!currentAnnotations || currentAnnotations.length === 0 || !annotationsVisible) {
+                legend.classList.remove('visible');
+                return;
+            }
+            
+            // Count annotations by label
+            const counts = {};
+            currentAnnotations.forEach(ann => {
+                const label = ann.label || ann.type;
+                counts[label] = (counts[label] || 0) + 1;
+            });
+            
+            // Generate legend HTML
+            legendItems.innerHTML = Object.entries(counts).map(([label, count]) => {
+                // Determine color class from label
+                let colorClass = 'other';
+                const labelLower = label.toLowerCase();
+                if (labelLower.includes('mvi')) colorClass = 'mvi';
+                else if (labelLower.includes('tumor') || label.match(/^G\d/)) colorClass = 'tumor';
+                else if (labelLower.includes('fibrosis') || label.match(/^S\d/)) colorClass = 'fibrosis';
+                else if (labelLower.includes('necrosis')) colorClass = 'necrosis';
+                
+                return `
+                    <div class="annotation-legend-item">
+                        <div class="annotation-legend-color ${colorClass}"></div>
+                        <span class="annotation-legend-label">${label}</span>
+                        <span class="annotation-legend-count">${count}</span>
+                    </div>
+                `;
+            }).join('');
+            
+            legend.classList.add('visible');
+        }
+        
+        function toggleAnnotations() {
+            annotationsVisible = !annotationsVisible;
+            const btn = document.getElementById('toggleAnnotationsBtn');
+            btn.classList.toggle('annotations-active', annotationsVisible);
+            renderAnnotations();
+            updateAnnotationLegend();
+        }
+    
+        // ==========================================
+        // NAVIGATION HISTORY FUNCTIONS
+        // ==========================================
+        
+        function pushToHistory(slideName, analysis) {
+            if (!slideName) return;
+            
+            // Don't push if it's the same as the last slide in history
+            if (slideHistory.length > 0 && slideHistory[slideHistory.length - 1].slideName === slideName) {
+                return;
+            }
+            
+            slideHistory.push({
+                slideName: slideName,
+                analysis: analysis,
+                timestamp: Date.now()
+            });
+            
+            // Limit history size
+            if (slideHistory.length > maxHistorySize) {
+                slideHistory.shift();
+            }
+            
+            updateBackButton();
+        }
+        
+        function goBackSlide() {
+            if (slideHistory.length === 0) return;
+            
+            const previous = slideHistory.pop();
+            updateBackButton();
+            
+            // Load the previous slide (don't push current to history to avoid loops)
+            loadSlide(previous.slideName, false);
+        }
+        
+        function updateBackButton() {
+            const backBtn = document.getElementById('navBackBtn');
+            const backName = document.getElementById('backSlideName');
+            
+            if (!backBtn || !backName) return;
+            
+            if (slideHistory.length > 0) {
+                const lastSlide = slideHistory[slideHistory.length - 1];
+                backBtn.classList.add('visible');
+                backName.textContent = `(${lastSlide.slideName})`;
+                backBtn.title = `Go back to ${lastSlide.slideName}`;
+            } else {
+                backBtn.classList.remove('visible');
+                backName.textContent = '';
+            }
+        }
+        
         // ============================================================
         // ZOOM & PAN FUNCTIONALITY
         // ============================================================
@@ -1685,14 +2188,21 @@
                 img.style.transform = `scale(${currentZoom}) translate(${currentTranslateX}px, ${currentTranslateY}px)`;
                 img.classList.toggle('zoomed', currentZoom > 1);
             }
+            
+            // Sync SVG annotation overlay with image transform
+            const svg = document.querySelector('.annotation-svg');
+            if (svg) {
+                svg.style.transform = `scale(${currentZoom}) translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+            }
         }
 
         function toggleFullscreen() {
             const viewerSection = document.querySelector('.viewer-section');
             const btn = document.getElementById('fullscreenBtn');
             if (!viewerSection || !btn) return;
-
+            
             viewerSection.classList.toggle('fullscreen');
+            
             const icon = btn.querySelector('i');
             if (viewerSection.classList.contains('fullscreen')) {
                 icon.className = 'ri-fullscreen-exit-line';
@@ -1701,6 +2211,12 @@
                 icon.className = 'ri-fullscreen-line';
                 btn.title = 'Toggle Fullscreen';
             }
+            
+            // Re-fit image and re-render annotations after layout settles
+            setTimeout(() => {
+                autoFitImage();
+                renderAnnotations();
+            }, 50);
         }
 
         function initZoomControls() {
@@ -1757,6 +2273,24 @@
             window.addEventListener('resize', () => {
                 if (document.getElementById('slideImage')?.src) {
                     autoFitImage();
+                    // Re-render annotations after resize
+                    setTimeout(() => renderAnnotations(), 50);
+                }
+            });
+            
+            // Also observe the slide display container for size changes (handles fullscreen)
+            const slideDisplayObserver = new ResizeObserver(() => {
+                if (document.getElementById('slideImage')?.src && imageLoaded) {
+                    autoFitImage();
+                    setTimeout(() => renderAnnotations(), 50);
+                }
+            });
+            
+            // Start observing once DOM is ready
+            document.addEventListener('DOMContentLoaded', () => {
+                const slideDisplay = document.getElementById('slideDisplay');
+                if (slideDisplay) {
+                    slideDisplayObserver.observe(slideDisplay);
                 }
             });
         }
@@ -1853,52 +2387,107 @@
         // UI UPDATE FUNCTIONS
         // ============================================================
         function updateDiagnosisPanel(analysis) {
+            const hasAnnotation = analysis.has_annotation || false;
+            const toggle = document.getElementById('sourceToggle');
+            
+            // Show/hide toggle based on annotation availability
+            if (hasAnnotation) {
+                toggle.style.display = 'flex';
+                // Only reset to annotation if this is a new slide load (not a toggle click)
+                if (!toggle.dataset.initialized || toggle.dataset.slide !== analysis.slidename) {
+                    diagnosisSource = 'annotation';
+                    document.querySelectorAll('.toggle-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.source === 'annotation');
+                    });
+                    document.getElementById('panelTitle').textContent = 'Pathologist Annotation';
+                    toggle.dataset.initialized = 'true';
+                    toggle.dataset.slide = analysis.slidename;
+                }
+            } else {
+                toggle.style.display = 'none';
+                diagnosisSource = 'ai';
+                document.getElementById('panelTitle').textContent = 'AI Diagnosis';
+            }
+            
+            // Determine which values to display
+            let gradeClass, fibClass, mviClass;
+            
+            if (diagnosisSource === 'annotation' && analysis.annotation_labels) {
+                const ann = analysis.annotation_labels;
+                gradeClass = (ann.grade !== null && ann.grade !== undefined) ? ann.grade : analysis.grade.predicted_class;
+                fibClass = (ann.fibrosis !== null && ann.fibrosis !== undefined) ? ann.fibrosis : analysis.fibrosis.predicted_class;
+                mviClass = (ann.mvi !== null && ann.mvi !== undefined) ? ann.mvi : analysis.mvi.predicted_class;
+            } else {
+                gradeClass = analysis.grade.predicted_class;
+                fibClass = analysis.fibrosis.predicted_class;
+                mviClass = analysis.mvi.predicted_class;
+            }
+            
             // Update Grade
-            const grade = analysis.grade;
             const gradePred = document.getElementById('gradePrediction');
-            gradePred.textContent = ['G1', 'G2', 'G3'][grade.predicted_class];
-            gradePred.className = 'card-prediction ' + ['g1', 'g2', 'g3'][grade.predicted_class];
-            grade.distribution.forEach((prob, i) => {
-                document.getElementById('gradeBar' + i).style.width = (prob * 100) + '%';
-                document.getElementById('gradeVal' + i).textContent = (prob * 100).toFixed(0) + '%';
-            });
-            updateConfidence('gradeConf', grade.confidence);
-
-            // Update Fibrosis
-            const fib = analysis.fibrosis;
+            gradePred.textContent = ['G1', 'G2', 'G3'][gradeClass];
+            gradePred.className = 'card-prediction ' + ['g1', 'g2', 'g3'][gradeClass];
+            
+            // Update Fibrosis  
             const fibPred = document.getElementById('fibrosisPrediction');
-            fibPred.textContent = ['F0-F1', 'F2-F3', 'F4'][fib.predicted_class];
-            fibPred.className = 'card-prediction ' + ['f0', 'f2', 'f4'][fib.predicted_class];
-            fib.distribution.forEach((prob, i) => {
-                document.getElementById('fibBar' + i).style.width = (prob * 100) + '%';
-                document.getElementById('fibVal' + i).textContent = (prob * 100).toFixed(0) + '%';
-            });
-            updateConfidence('fibConf', fib.confidence);
-
+            fibPred.textContent = ['F0-F1', 'F2-F3', 'F4'][fibClass];
+            fibPred.className = 'card-prediction ' + ['f0', 'f2', 'f4'][fibClass];
+            
             // Update MVI
-            const mvi = analysis.mvi;
             const mviPred = document.getElementById('mviPrediction');
-            mviPred.textContent = ['Absent', 'Present'][mvi.predicted_class];
-            mviPred.className = 'card-prediction ' + ['absent', 'present'][mvi.predicted_class];
-            mvi.distribution.forEach((prob, i) => {
-                document.getElementById('mviBar' + i).style.width = (prob * 100) + '%';
-                document.getElementById('mviVal' + i).textContent = (prob * 100).toFixed(0) + '%';
+            mviPred.textContent = ['Absent', 'Present'][mviClass];
+            mviPred.className = 'card-prediction ' + ['absent', 'present'][mviClass];
+            
+            // Show/hide probability bars based on source
+            const showProbs = (diagnosisSource === 'ai');
+            document.getElementById('gradeProbs').style.display = showProbs ? 'flex' : 'none';
+            document.getElementById('fibrosisProbs').style.display = showProbs ? 'flex' : 'none';
+            document.getElementById('mviProbs').style.display = showProbs ? 'flex' : 'none';
+            
+            // Show/hide confidence indicators based on source
+            document.querySelectorAll('.confidence-indicator').forEach(el => {
+                el.style.display = showProbs ? 'flex' : 'none';
             });
-            updateConfidence('mviConf', mvi.confidence);
-
-            // Show MVI alert if positive
+            
+            if (showProbs) {
+                // Update probability bars
+                analysis.grade.distribution.forEach((prob, i) => {
+                    document.getElementById(`gradeBar${i}`).style.width = `${prob * 100}%`;
+                    document.getElementById(`gradeVal${i}`).textContent = `${(prob * 100).toFixed(0)}%`;
+                });
+                analysis.fibrosis.distribution.forEach((prob, i) => {
+                    document.getElementById(`fibBar${i}`).style.width = `${prob * 100}%`;
+                    document.getElementById(`fibVal${i}`).textContent = `${(prob * 100).toFixed(0)}%`;
+                });
+                analysis.mvi.distribution.forEach((prob, i) => {
+                    document.getElementById(`mviBar${i}`).style.width = `${prob * 100}%`;
+                    document.getElementById(`mviVal${i}`).textContent = `${(prob * 100).toFixed(0)}%`;
+                });
+                
+                // Update confidence values
+                updateConfidence('gradeConf', analysis.grade.confidence);
+                updateConfidence('fibConf', analysis.fibrosis.confidence);
+                updateConfidence('mviConf', analysis.mvi.confidence);
+            }
+            
+            // MVI alert
             const mviAlert = document.getElementById('mviAlert');
-            if (mvi.predicted_class === 1 && mvi.confidence > 0.6) {
+            if (mviClass === 1) {
                 mviAlert.classList.add('visible');
             } else {
                 mviAlert.classList.remove('visible');
             }
         }
-
+        
         function updateConfidence(elementId, confidence) {
             const el = document.getElementById(elementId);
-            el.textContent = (confidence * 100).toFixed(0) + '%';
-            el.className = 'confidence-value ' + (confidence > 0.8 ? 'high' : confidence > 0.6 ? 'medium' : 'low');
+            if (!el) return;
+            const pct = (confidence * 100).toFixed(0);
+            el.textContent = `${pct}%`;
+            el.className = 'confidence-value';
+            if (confidence >= 0.8) el.classList.add('high');
+            else if (confidence >= 0.6) el.classList.add('medium');
+            else el.classList.add('low');
         }
 
         function updateRetrievalGrid(results) {
@@ -1916,10 +2505,10 @@
             
             grid.innerHTML = state.retrievedSlides.map((result, index) => {
                 const a = result.analysis;
-                const gradeTag = ['G1', 'G2', 'G3'][a.grade.predictedclass];
-                const fibTag = ['F0-F1', 'F2-F3', 'F4'][a.fibrosis.predictedclass];
-                const mviTag = a.mvi.predictedclass === 1 ? 'MVI+' : 'MVI-';
-                const mviClass = a.mvi.predictedclass === 1 ? 'mvi-pos' : 'mvi-neg';
+                const gradeTag = ['G1', 'G2', 'G3'][a.grade.predicted_class];
+                const fibTag = ['F0-F1', 'F2-F3', 'F4'][a.fibrosis.predicted_class];
+                const mviTag = a.mvi.predicted_class === 1 ? 'MVI+' : 'MVI-';
+                const mviClass = a.mvi.predicted_class === 1 ? 'mvi-pos' : 'mvi-neg';
                 const thumbUrl = `${API_BASE}/api/thumbnail/${result.slidename}?size=256`;
                 
                 return `
@@ -1945,12 +2534,21 @@
         function loadSlideImage(slideName) {
             const img = document.getElementById('slideImage');
             if (!img) return;
+            
+            imageLoaded = false;
         
             img.onload = () => {
                 img.classList.remove('loading');
+                imageLoaded = true;
                 // Auto-fit the image to container
                 autoFitImage();
+                // Only render annotations if they're also loaded
+                if (annotationsLoaded) {
+                    renderAnnotations();
+                    updateAnnotationLegend();
+                }
             };
+
             img.onerror = () => {
                 img.style.display = 'none';
             };
@@ -1958,6 +2556,8 @@
             img.style.display = 'block';
             img.src = `${API_BASE}/api/thumbnail/${slideName}?size=1024`;
         }
+
+
         
         function autoFitImage() {
             const img = document.getElementById('slideImage');
@@ -1999,11 +2599,21 @@
             await loadSlide(file.name);
         }
 
-        async function loadSlide(filePath) {
+        async function loadSlide(filePath, addToHistory = true) {
+            // Push current slide to history before loading new one
+            if (addToHistory && state.currentSlide && state.currentSlide !== filePath) {
+                pushToHistory(state.currentSlide, state.currentAnalysis);
+            }
             document.getElementById('viewerLoading').classList.add('active');
             document.getElementById('slidePlaceholder').style.display = 'none';
             document.getElementById('slideDisplay').style.display = 'flex';
             resetZoom();
+            
+            // Reset annotation state for new slide
+            imageLoaded = false;
+            annotationsLoaded = false;
+            currentAnnotations = null;
+            currentDimensions = null;
 
             const slideName = filePath.split('/').pop().split('.')[0];
             document.getElementById('currentSlideName').textContent = slideName;
@@ -2022,6 +2632,7 @@
                 badge.className = 'slide-badge ' + result.analysis.source;
 
                 loadSlideImage(slideName);
+                loadAnnotations(slideName);
 
                 const retrieval = await retrieveSimilar(slideName, 5, state.currentStrategy);
                 updateRetrievalGrid(retrieval.results);
@@ -2033,6 +2644,22 @@
         function selectDiagnosis(type) {
             document.querySelectorAll('.diagnosis-card').forEach(card => card.classList.remove('active'));
             document.getElementById(type + 'Card').classList.add('active');
+        }
+
+        function setDiagnosisSource(source) {
+            diagnosisSource = source;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.source === source);
+            });
+            
+            // Update panel title
+            document.getElementById('panelTitle').textContent = 
+                source === 'annotation' ? 'Pathologist Annotation' : 'AI Diagnosis';
+            
+            // Re-render diagnosis panel with current analysis
+            if (state.currentAnalysis) {
+                updateDiagnosisPanel(state.currentAnalysis);
+            }
         }
 
         async function setStrategy(strategy) {
@@ -2055,62 +2682,112 @@
             openComparison(state.retrievedSlides[index]);
         }
 
+        // Navigate to reference slide from comparison modal
+        function viewReferenceSlide() {
+            const refSlideName = document.getElementById('compRefName').textContent;
+            if (refSlideName && refSlideName !== '--') {
+                closeComparison();
+                loadSlide(refSlideName, true);  // true = add current slide to history
+            }
+        }
+
         function openComparison(retrievedSlide) {
             // Defensive check
             if (!retrievedSlide) {
                 console.error('No retrieved slide data');
                 return;
             }
-            
+        
             const modal = document.getElementById('comparisonModal');
             modal.classList.add('active');
-            
-            // Handle both slide_name and slidename property names
-            const refSlideName = retrievedSlide.slide_name || retrievedSlide.slidename;
-            
+        
+            // Handle both slidename and slidename property names
+            const refSlideName = retrievedSlide.slidename || retrievedSlide.slide_name;
+        
             document.getElementById('compQueryName').textContent = state.currentSlide || '--';
             document.getElementById('compRefName').textContent = refSlideName || '--';
             document.getElementById('compSimilarity').textContent = retrievedSlide.similarity ? (retrievedSlide.similarity * 100).toFixed(0) : '--';
+
+            const refNameEl = document.getElementById('compRefName');
+            refNameEl.style.cursor = 'pointer';
+            refNameEl.title = `Click to view ${refSlideName}`;
+            refNameEl.onclick = viewReferenceSlide;
             
             const qa = state.currentAnalysis;
             const ra = retrievedSlide.analysis;
+
             if (qa && ra) {
-                updateMatchIndicator('compGradeMatch', qa.grade.predictedclass === ra.grade.predictedclass);
-                updateMatchIndicator('compFibMatch', qa.fibrosis.predictedclass === ra.fibrosis.predictedclass);
-                updateMatchIndicator('compMVIMatch', qa.mvi.predictedclass === ra.mvi.predictedclass);
+                // Helper to get value and source
+                const getValue = (analysis, field) => {
+                    if (analysis[field].ground_truth !== null && analysis[field].ground_truth !== undefined) {
+                        return { value: analysis[field].ground_truth, source: 'annotation' };
+                    }
+                    return { value: analysis[field].predicted_class, source: 'ai' };
+                };
+                
+                const qGrade = getValue(qa, 'grade');
+                const rGrade = getValue(ra, 'grade');
+                const qFib = getValue(qa, 'fibrosis');
+                const rFib = getValue(ra, 'fibrosis');
+                const qMvi = getValue(qa, 'mvi');
+                const rMvi = getValue(ra, 'mvi');
+                
+                // Update match indicators with source info
+                updateMatchIndicatorWithSource('compGradeMatch', 'Grade Match', 
+                    qGrade.value === rGrade.value, qGrade.source, rGrade.source);
+                updateMatchIndicatorWithSource('compFibMatch', 'Fibrosis Match', 
+                    qFib.value === rFib.value, qFib.source, rFib.source);
+                updateMatchIndicatorWithSource('compMVIMatch', 'MVI Match', 
+                    qMvi.value === rMvi.value, qMvi.source, rMvi.source);
             }
-            
+
+
             // Load slide images into comparison canvases
             const queryCanvas = document.getElementById('compQueryCanvas');
             const refCanvas = document.getElementById('compRefCanvas');
             
-            // Create query image
+            // Create query slide image
             queryCanvas.innerHTML = '';
             if (state.currentSlide) {
                 const queryImg = document.createElement('img');
-                queryImg.src = API_BASE + '/api/thumbnail/' + state.currentSlide + '?size=1024';
+                queryImg.src = `${API_BASE}/api/thumbnail/${state.currentSlide}?size=1024`;
                 queryImg.alt = 'Query Slide';
                 queryImg.onerror = function() { this.style.display = 'none'; };
                 queryCanvas.appendChild(queryImg);
             }
             
-            // Create reference image
+            // Create reference slide image
             refCanvas.innerHTML = '';
             if (refSlideName) {
                 const refImg = document.createElement('img');
-                refImg.src = API_BASE + '/api/thumbnail/' + refSlideName + '?size=1024';
+                refImg.src = `${API_BASE}/api/thumbnail/${refSlideName}?size=1024`;
                 refImg.alt = 'Reference Slide';
+                refImg.style.cursor = 'pointer';
+                refImg.title = `Click to view ${refSlideName}`;
+                refImg.onclick = viewReferenceSlide;
                 refImg.onerror = function() { this.style.display = 'none'; };
                 refCanvas.appendChild(refImg);
             }
         }
 
-        
-
-        function updateMatchIndicator(elementId, isMatch) {
+        function updateMatchIndicatorWithSource(elementId, label, isMatch, querySource, refSource) {
             const el = document.getElementById(elementId);
-            el.textContent = isMatch ? '✓' : '✗';
+            if (!el) return;
+            
+            el.innerHTML = isMatch ? '<i class="ri-check-line"></i>' : '<i class="ri-close-line"></i>';
             el.className = 'comparison-stat-value ' + (isMatch ? 'match' : 'mismatch');
+            
+            const qIcon = querySource === 'annotation' ? 'ri-file-text-line' : 'ri-robot-line';
+            const rIcon = refSource === 'annotation' ? 'ri-file-text-line' : 'ri-robot-line';
+            const qColor = querySource === 'annotation' ? 'var(--accent-success)' : 'var(--accent-warning)';
+            const rColor = refSource === 'annotation' ? 'var(--accent-success)' : 'var(--accent-warning)';
+            
+            const labelEl = el.parentElement.querySelector('.comparison-stat-label');
+            if (labelEl) {
+                labelEl.innerHTML = `${label} <span style="font-size:9px; opacity:0.7;">
+                    (<i class="${qIcon}" style="color:${qColor}" title="Query: ${querySource}"></i> vs 
+                     <i class="${rIcon}" style="color:${rColor}" title="Reference: ${refSource}"></i>)</span>`;
+            }
         }
 
         function closeComparison() {
