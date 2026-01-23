@@ -2536,29 +2536,28 @@
             if (!img) return;
             
             imageLoaded = false;
-        
+            
             img.onload = () => {
                 img.classList.remove('loading');
                 imageLoaded = true;
-                // Auto-fit the image to container
                 autoFitImage();
-                // Only render annotations if they're also loaded
                 if (annotationsLoaded) {
                     renderAnnotations();
                     updateAnnotationLegend();
                 }
             };
-
+            
             img.onerror = () => {
                 img.style.display = 'none';
             };
+            
             img.classList.add('loading');
             img.style.display = 'block';
-            img.src = `${API_BASE}/api/thumbnail/${slideName}?size=1024`;
+            
+            // Add timestamp to bust browser cache when loading different slide
+            img.src = `${API_BASE}/api/thumbnail/${slideName}?size=1024&t=${Date.now()}`;
         }
 
-
-        
         function autoFitImage() {
             const img = document.getElementById('slideImage');
             const container = document.getElementById('slideDisplay');
@@ -2604,6 +2603,8 @@
             if (addToHistory && state.currentSlide && state.currentSlide !== filePath) {
                 pushToHistory(state.currentSlide, state.currentAnalysis);
             }
+            
+            // Show loading overlay
             document.getElementById('viewerLoading').classList.add('active');
             document.getElementById('slidePlaceholder').style.display = 'none';
             document.getElementById('slideDisplay').style.display = 'flex';
@@ -2614,32 +2615,139 @@
             annotationsLoaded = false;
             currentAnnotations = null;
             currentDimensions = null;
-
+            
             const slideName = filePath.split('/').pop().split('.')[0];
             document.getElementById('currentSlideName').textContent = slideName;
-
-            const result = await analyzeSlide(filePath);
-
-            if (result.status === 'complete') {
-                state.currentSlide = slideName;
-                state.currentAnalysis = result.analysis;
-
-                updateDiagnosisPanel(result.analysis);
-
-                const badge = document.getElementById('slideBadge');
-                badge.style.display = 'inline';
-                badge.textContent = result.analysis.source === 'validated' ? 'Validated' : 'New';
-                badge.className = 'slide-badge ' + result.analysis.source;
-
-                loadSlideImage(slideName);
-                loadAnnotations(slideName);
-
-                const retrieval = await retrieveSimilar(slideName, 5, state.currentStrategy);
-                updateRetrievalGrid(retrieval.results);
+            
+            // Reset badge immediately (hide until we know the status)
+            const badge = document.getElementById('slideBadge');
+            badge.style.display = 'none';
+            
+            try {
+                const result = await analyzeSlide(filePath);
+                
+                if (result.status === 'complete' && result.analysis) {
+                    state.currentSlide = slideName;
+                    state.currentAnalysis = result.analysis;
+                    updateDiagnosisPanel(result.analysis);
+                    
+                    // Update badge based on analysis source
+                    badge.style.display = 'inline';
+                    badge.textContent = result.analysis.source === 'validated' ? 'Validated' : 'New';
+                    badge.className = 'slide-badge ' + result.analysis.source;
+                    
+                    // Show/hide source toggle based on hasAnnotation
+                    const sourceToggle = document.getElementById('sourceToggle');
+                    if (result.analysis.hasAnnotation) {
+                        sourceToggle.style.display = 'flex';
+                    } else {
+                        sourceToggle.style.display = 'none';
+                        // Force AI mode if no annotations
+                        setDiagnosisSource('ai');
+                    }
+                    
+                    loadSlideImage(slideName);
+                    loadAnnotations(slideName);
+                    
+                    // Retrieve similar slides
+                    const retrieval = await retrieveSimilar(slideName, 5, state.currentStrategy);
+                    updateRetrievalGrid(retrieval.results);
+                    
+                } else if (result.status === 'error') {
+                    // Handle error from server
+                    console.error('Analysis error:', result.message);
+                    showSlideError(slideName, result.message || 'Slide not found in database');
+                    
+                } else {
+                    // Handle unexpected response
+                    console.error('Unexpected analysis result:', result);
+                    showSlideError(slideName, 'Unexpected error during analysis');
+                }
+                
+            } catch (error) {
+                console.error('Failed to load slide:', error);
+                showSlideError(slideName, 'Failed to connect to server');
             }
-
+            
+            // Always hide loading overlay
             document.getElementById('viewerLoading').classList.remove('active');
         }
+        
+        // Add this new helper function
+        function showSlideError(slideName, message) {
+            // Update state
+            state.currentSlide = slideName;
+            state.currentAnalysis = null;
+            
+            // Show error badge
+            const badge = document.getElementById('slideBadge');
+            badge.style.display = 'inline';
+            badge.textContent = 'Not Found';
+            badge.className = 'slide-badge';
+            badge.style.background = 'var(--accent-danger-dim)';
+            badge.style.color = 'var(--accent-danger)';
+            
+            // Hide source toggle
+            document.getElementById('sourceToggle').style.display = 'none';
+            
+            // Show placeholder with error message
+            document.getElementById('slideDisplay').style.display = 'none';
+            const placeholder = document.getElementById('slidePlaceholder');
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = `
+                <i class="ri-error-warning-line" style="color: var(--accent-danger);"></i>
+                <p style="color: var(--accent-danger); font-weight: 500;">${message}</p>
+                <p style="font-size: 12px; margin-top: 8px;">Slide "${slideName}" is not in the database.<br>
+                Only pre-processed slides can be analyzed.</p>
+            `;
+            
+            // Clear diagnosis panel
+            resetDiagnosisPanel();
+            
+            // Clear retrieval grid
+            document.getElementById('retrievalGrid').innerHTML = 
+                '<div class="retrieval-empty"><i class="ri-close-circle-line"></i> Cannot retrieve similar cases for unknown slides</div>';
+        }
+        
+        // Add this function to reset the diagnosis panel
+        function resetDiagnosisPanel() {
+            // Reset grade
+            document.getElementById('gradePrediction').textContent = '--';
+            document.getElementById('gradePrediction').className = 'card-prediction';
+            
+            // Reset fibrosis
+            document.getElementById('fibrosisPrediction').textContent = '--';
+            document.getElementById('fibrosisPrediction').className = 'card-prediction';
+            
+            // Reset MVI
+            document.getElementById('mviPrediction').textContent = '--';
+            document.getElementById('mviPrediction').className = 'card-prediction';
+            
+            // Hide MVI alert
+            document.getElementById('mviAlert').classList.remove('visible');
+            
+            // Reset probability bars
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`gradeBar${i}`).style.width = '0';
+                document.getElementById(`gradeVal${i}`).textContent = '--';
+                document.getElementById(`fibBar${i}`).style.width = '0';
+                document.getElementById(`fibVal${i}`).textContent = '--';
+            }
+            for (let i = 0; i < 2; i++) {
+                document.getElementById(`mviBar${i}`).style.width = '0';
+                document.getElementById(`mviVal${i}`).textContent = '--';
+            }
+            
+            // Reset confidence
+            ['gradeConf', 'fibConf', 'mviConf'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = '--';
+                    el.className = 'confidence-value';
+                }
+            });
+        }
+
 
         function selectDiagnosis(type) {
             document.querySelectorAll('.diagnosis-card').forEach(card => card.classList.remove('active'));
@@ -3059,19 +3167,62 @@
             }
         }, false);
         
-        // Handle the drop
+        // In the drop event handler
         dropzone.addEventListener('drop', async (e) => {
             e.preventDefault();
             e.stopPropagation();
             dropzone.classList.remove('active');
-            
             const file = e.dataTransfer.files[0];
             if (file) {
                 console.log('Dropped file:', file.name);
-                await loadSlide(file.name);
+                // Force fresh load by clearing current state first
+                clearCurrentSlide();
+                await loadSlide(file.name, true);
             }
         }, false);
-
+        
+        // Add this new function to clear the current slide state
+        function clearCurrentSlide() {
+            // Reset state
+            state.currentSlide = null;
+            state.currentAnalysis = null;
+            state.retrievedSlides = [];
+            state.selectedRetrievalIndex = null;
+            
+            // Reset badge
+            const badge = document.getElementById('slideBadge');
+            badge.style.display = 'none';
+            badge.style.background = '';  // Reset custom styles
+            badge.style.color = '';
+            
+            // Reset annotation state
+            imageLoaded = false;
+            annotationsLoaded = false;
+            currentAnnotations = null;
+            currentDimensions = null;
+            
+            // Clear the image (force browser to re-fetch)
+            const img = document.getElementById('slideImage');
+            if (img) {
+                img.src = '';
+                img.style.display = 'none';
+            }
+            
+            // Remove existing SVG annotations
+            const container = document.getElementById('slideDisplay');
+            const existingSvg = container?.querySelector('.annotation-svg');
+            if (existingSvg) existingSvg.remove();
+            
+            // Reset zoom
+            resetZoom();
+            
+            // Hide annotation legend
+            document.getElementById('annotationLegend')?.classList.remove('visible');
+            
+            // Clear retrieval grid
+            document.getElementById('retrievalGrid').innerHTML = 
+                '<div class="retrieval-empty"><i class="ri-folder-search-line"></i> Loading similar cases...</div>';
+        }
 
         // ============================================================
         // KEYBOARD SHORTCUTS
